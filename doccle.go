@@ -10,7 +10,10 @@ func main() {
 	var configuration = GetConfiguration()
 	var documentsResult = GetDocuments(configuration)
 
-	fmt.Println(documentsResult.TotalResults)
+	for _, document := range documentsResult.Documents {
+		fmt.Printf("%s%s\n", "https://secure.doccle.be/doccle-euui", document.ContentURL)
+	}
+
 }
 
 // Configuration struct
