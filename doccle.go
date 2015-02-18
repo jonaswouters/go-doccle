@@ -8,8 +8,9 @@ import (
 
 func main() {
 	var configuration = GetConfiguration()
-	GetUserInfo(configuration)
+	var documentsResult = GetDocuments(configuration)
 
+	fmt.Println(documentsResult.TotalResults)
 }
 
 // Configuration struct
