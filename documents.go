@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"log"
-	"net/http"
 )
 
 // DocumentsResult object
@@ -46,14 +45,7 @@ type DocumentsResult struct {
 func GetDocuments(configuration Configuration) DocumentsResult {
 	url := "https://secure.doccle.be/doccle-euui/rest/v1/documents?lang=en&order=DESC&page=1&pageSize=50&sort=date"
 
-	req, err := http.NewRequest("GET", url, nil)
-
-	req.SetBasicAuth(configuration.Username, configuration.Password)
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		panic(err)
-	}
+	var resp = DoRequest(configuration, url)
 	defer resp.Body.Close()
 
 	var data = DocumentsResult{}

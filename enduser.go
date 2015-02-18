@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"log"
-	"net/http"
 )
 
 // EndUser object
@@ -17,14 +16,7 @@ type EndUser struct {
 func GetUserInfo(configuration Configuration) EndUser {
 	url := "https://secure.doccle.be/doccle-euui/rest/v1/user"
 
-	req, err := http.NewRequest("GET", url, nil)
-
-	req.SetBasicAuth(configuration.Username, configuration.Password)
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		panic(err)
-	}
+	var resp = DoRequest(configuration, url)
 	defer resp.Body.Close()
 
 	var data struct {
