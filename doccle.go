@@ -3,9 +3,9 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
-	"log"
 )
 
 type (
@@ -21,27 +21,33 @@ type (
 		SortOrder     string      `json:"sortOrder"`
 		TotalPages    int         `json:"totalPages"`
 		TotalResults  int         `json:"totalResults"`
-		Documents     []struct {
-			Actions []struct {
-				Enabled bool   `json:"enabled"`
-				ID      int    `json:"id"`
-				Label   string `json:"label"`
-				URL     string `json:"url"`
-			} `json:"actions"`
-			Categories       []string    `json:"categories"`
-			ContentURL       string      `json:"contentUrl"`
-			CreationDate     string      `json:"creationDate"`
-			Name             string      `json:"name"`
-			Payment          interface{} `json:"payment"`
-			PresentationType string      `json:"presentationType"`
-			Sender           struct {
-				ID    string `json:"id"`
-				Label string `json:"label"`
-			} `json:"sender"`
-			SenderDocumentType string      `json:"senderDocumentType"`
-			ShortName          interface{} `json:"shortName"`
-			URI                string      `json:"uri"`
-		} `json:"documents"`
+		Documents     []Document  `json:"documents"`
+	}
+
+	Document struct {
+		Actions            []Action    `json:"actions"`
+		Categories         []string    `json:"categories"`
+		ContentURL         string      `json:"contentUrl"`
+		CreationDate       string      `json:"creationDate"`
+		Name               string      `json:"name"`
+		Payment            interface{} `json:"payment"`
+		PresentationType   string      `json:"presentationType"`
+		Sender             Sender      `json:"sender"`
+		SenderDocumentType string      `json:"senderDocumentType"`
+		ShortName          interface{} `json:"shortName"`
+		URI                string      `json:"uri"`
+	}
+
+	Action struct {
+		Enabled bool   `json:"enabled"`
+		ID      int    `json:"id"`
+		Label   string `json:"label"`
+		URL     string `json:"url"`
+	}
+
+	Sender struct {
+		ID    string `json:"id"`
+		Label string `json:"label"`
 	}
 
 	EndUser struct {
