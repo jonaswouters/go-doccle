@@ -3,39 +3,70 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io"
+	"net/http"
 	"os"
-	"strings"
+	"log"
 )
 
-func main() {
-	var configuration = GetConfiguration()
-	var documentsResult = GetDocuments(configuration)
-
-	for _, document := range documentsResult.Documents {
-		url := strings.Join([]string{"https://secure.doccle.be/doccle-euui", document.ContentURL}, "")
-		var resp = DoRequest(configuration, url)
-		defer resp.Body.Close()
-
-		var filename = strings.Join([]string{strings.Replace(document.Name, "/", "-", 999), ".pdf"}, "")
-
-		out, err := os.Create(filename)
-		defer out.Close()
-
-		n, err := io.Copy(out, resp.Body)
-		if err != nil {
-			fmt.Println("error:", err)
-		}
-
-		fmt.Printf("%s (%d)\n", filename, n)
+type (
+	DocumentsResult struct {
+		CurrentPage   int         `json:"currentPage"`
+		HasMore       bool        `json:"hasMore"`
+		NextPage      int         `json:"nextPage"`
+		PageSize      int         `json:"pageSize"`
+		PreviousPage  interface{} `json:"previousPage"`
+		Results       int         `json:"results"`
+		SortField     string      `json:"sortField"`
+		SortFieldType string      `json:"sortFieldType"`
+		SortOrder     string      `json:"sortOrder"`
+		TotalPages    int         `json:"totalPages"`
+		TotalResults  int         `json:"totalResults"`
+		Documents     []struct {
+			Actions []struct {
+				Enabled bool   `json:"enabled"`
+				ID      int    `json:"id"`
+				Label   string `json:"label"`
+				URL     string `json:"url"`
+			} `json:"actions"`
+			Categories       []string    `json:"categories"`
+			ContentURL       string      `json:"contentUrl"`
+			CreationDate     string      `json:"creationDate"`
+			Name             string      `json:"name"`
+			Payment          interface{} `json:"payment"`
+			PresentationType string      `json:"presentationType"`
+			Sender           struct {
+				ID    string `json:"id"`
+				Label string `json:"label"`
+			} `json:"sender"`
+			SenderDocumentType string      `json:"senderDocumentType"`
+			ShortName          interface{} `json:"shortName"`
+			URI                string      `json:"uri"`
+		} `json:"documents"`
 	}
 
-}
+	EndUser struct {
+		ID        int    `json:"id"`
+		FirstName string `json:"firstName"`
+		LastName  string `json:"lastName"`
+	}
 
-// Configuration struct
-type Configuration struct {
-	Username string
-	Password string
+	Configuration struct {
+		Username string
+		Password string
+	}
+)
+
+func DoRequest(configuration Configuration, url string) *http.Response {
+	req, err := http.NewRequest("GET", url, nil)
+
+	req.SetBasicAuth(configuration.Username, configuration.Password)
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		panic(err)
+	}
+
+	return resp
 }
 
 // GetConfiguration retrieves the config.json file and parses it
@@ -48,4 +79,21 @@ func GetConfiguration() Configuration {
 		fmt.Println("error:", err)
 	}
 	return configuration
+}
+
+// GetDocuments retrieves and returns an DocumentsResult struct
+func GetDocuments(configuration Configuration) DocumentsResult {
+	url := "https://secure.doccle.be/doccle-euui/rest/v1/documents?lang=en&order=DESC&page=1&pageSize=50&sort=date"
+
+	var resp = DoRequest(configuration, url)
+	defer resp.Body.Close()
+
+	var data = DocumentsResult{}
+
+	dec := json.NewDecoder(resp.Body)
+	if err := dec.Decode(&data); err != nil {
+		log.Println(err)
+	}
+
+	return data
 }
