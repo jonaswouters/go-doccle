@@ -1,4 +1,4 @@
-package main
+package doccle
 
 import (
 	"encoding/json"
