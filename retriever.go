@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-	"strings"
 	"github.com/jonaswouters/go-doccle/doccle"
+	"strings"
 )
 
 func main() {

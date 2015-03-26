@@ -3,11 +3,15 @@ package doccle
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
 	"strings"
-	"io"
+)
+
+const (
+	API_URL = "https://secure.doccle.be/doccle-euui"
 )
 
 type (
@@ -91,7 +95,7 @@ func GetConfiguration() Configuration {
 
 // GetDocuments retrieves and returns an DocumentsResult struct
 func GetDocuments(configuration Configuration) DocumentsResult {
-	url := "https://secure.doccle.be/doccle-euui/rest/v1/documents?lang=en&order=DESC&page=1&pageSize=50&sort=date"
+	url := strings.Join([]string{API_URL, "/rest/v1/documents?lang=en&order=DESC&page=1&pageSize=50&sort=date"}, "")
 
 	var resp = DoRequest(configuration, url)
 	defer resp.Body.Close()
@@ -106,8 +110,9 @@ func GetDocuments(configuration Configuration) DocumentsResult {
 	return data
 }
 
+// Download the document's file
 func (document Document) Download(configuration Configuration, filename string) (int64, error) {
-	url := strings.Join([]string{"https://secure.doccle.be/doccle-euui", document.ContentURL}, "")
+	url := strings.Join([]string{API_URL, document.ContentURL}, "")
 	var resp = DoRequest(configuration, url)
 	defer resp.Body.Close()
 
@@ -115,7 +120,7 @@ func (document Document) Download(configuration Configuration, filename string) 
 	defer out.Close()
 
 	if err != nil {
-	 return 0, err
+		return 0, err
 	}
 
 	n, err := io.Copy(out, resp.Body)
