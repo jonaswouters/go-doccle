@@ -6,6 +6,8 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
+	"io"
 )
 
 type (
@@ -102,4 +104,21 @@ func GetDocuments(configuration Configuration) DocumentsResult {
 	}
 
 	return data
+}
+
+func (document Document) Download(configuration Configuration, filename string) (int64, error) {
+	url := strings.Join([]string{"https://secure.doccle.be/doccle-euui", document.ContentURL}, "")
+	var resp = DoRequest(configuration, url)
+	defer resp.Body.Close()
+
+	out, err := os.Create(filename)
+	defer out.Close()
+
+	if err != nil {
+	 return 0, err
+	}
+
+	n, err := io.Copy(out, resp.Body)
+
+	return n, err
 }
