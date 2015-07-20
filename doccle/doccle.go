@@ -11,12 +11,13 @@ import (
 )
 
 const (
+	// API_URL Url of the API
 	API_URL = "https://secure.doccle.be/doccle-euui"
 )
 
 type (
 	DocumentsResult struct {
-		CurrentPage   int         `json:"currentPage"`
+		CurrentPage   int         `json:"currentPage",xml:"username"`
 		HasMore       bool        `json:"hasMore"`
 		NextPage      int         `json:"nextPage"`
 		PageSize      int         `json:"pageSize"`
@@ -68,8 +69,9 @@ type (
 	}
 )
 
-func DoRequest(configuration Configuration, url string) *http.Response {
-	req, err := http.NewRequest("GET", url, nil)
+// DoRequest makes a request
+func DoRequest(configuration Configuration, url string, method string) *http.Response {
+	req, err := http.NewRequest(method, url, nil)
 
 	req.SetBasicAuth(configuration.Username, configuration.Password)
 	client := &http.Client{}
@@ -97,7 +99,24 @@ func GetConfiguration() Configuration {
 func GetDocuments(configuration Configuration) DocumentsResult {
 	url := strings.Join([]string{API_URL, "/rest/v1/documents?lang=en&order=DESC&page=1&pageSize=50&sort=date"}, "")
 
-	var resp = DoRequest(configuration, url)
+	var resp = DoRequest(configuration, url, "GET")
+	defer resp.Body.Close()
+
+	var data = DocumentsResult{}
+
+	dec := json.NewDecoder(resp.Body)
+	if err := dec.Decode(&data); err != nil {
+		log.Println(err)
+	}
+
+	return data
+}
+
+// GetNewDocuments retrieves and returns an DocumentsResult struct with new documents only
+func GetNewDocuments(configuration Configuration) DocumentsResult {
+	url := strings.Join([]string{API_URL, "/rest/v1/documents/new?lang=en&order=DESC&page=1&pageSize=50&sort=date"}, "")
+
+	var resp = DoRequest(configuration, url, "GET")
 	defer resp.Body.Close()
 
 	var data = DocumentsResult{}
@@ -111,12 +130,12 @@ func GetDocuments(configuration Configuration) DocumentsResult {
 }
 
 // Download the document's file
-func (document Document) Download(configuration Configuration, filename string) (int64, error) {
+func (document Document) Download(configuration Configuration, path string, filename string) (int64, error) {
 	url := strings.Join([]string{API_URL, document.ContentURL}, "")
-	var resp = DoRequest(configuration, url)
+	var resp = DoRequest(configuration, url, "GET")
 	defer resp.Body.Close()
 
-	out, err := os.Create(filename)
+	out, err := os.Create(strings.Join([]string{path, filename}, ""))
 	defer out.Close()
 
 	if err != nil {
@@ -126,4 +145,15 @@ func (document Document) Download(configuration Configuration, filename string) 
 	n, err := io.Copy(out, resp.Body)
 
 	return n, err
+}
+
+// Archive the document
+func (document Document) Archive(configuration Configuration) {
+	for _, action := range document.Actions {
+		if action.Label == "ARCHIVE" {
+			url := strings.Join([]string{API_URL, action.URL}, "")
+			var resp = DoRequest(configuration, url, "PUT")
+			defer resp.Body.Close()
+		}
+	}
 }
