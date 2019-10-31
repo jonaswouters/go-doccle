@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/jonaswouters/go-doccle/doccle"
+	"github.com/jonaswouters/go-doccle/pkg/doccle"
 	"os/user"
 	"strings"
 )

@@ -1,5 +1,7 @@
 config.json
 
 doccle-document-retriever
-
+/retriever.exe
+/retriever
+/.idea
 *.pdf
